@@ -1,0 +1,21 @@
+{
+  "name": "petrock",
+  "version": "1.0.0",
+  "description": "Discord bot for pet rocks",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "pet"
+  ],
+  "author": "Anton Petrochenko",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^12.5.1",
+    "sqlite3": "^5.0.0",
+    "unique-names-generator": "^4.3.1"
+  }
+}
