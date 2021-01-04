@@ -1,5 +1,4 @@
 // Copyright 2021 Anton Petrochenko
-// This file is a part of the Pet Rock Bot
 // This code is licensed under MIT license (see LICENSE for details)
 
 const discordjs = require("discord.js")
@@ -19,9 +18,9 @@ discordClient.on('message',(message) => {
     console.log('Received a message')
     if (message.content.match(/^!rocks/)) {
         var relatedUser = {}
-        var command = message.content.match(/^!rocks (.*)/)[1]
+        var command = message.content.match(/^!rocks (.*?)(?= |$)/)[1]
         if (commands[command]) {
-            commands[command](rocksDatabase,message,{...command})
+            commands[command](rocksDatabase,message,command)
         } else {
             message.reply(`Unknown command \`${command}\`! \`!rocks help\` for a quick rundown.`)
         }
