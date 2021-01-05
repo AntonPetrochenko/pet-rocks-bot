@@ -14,7 +14,7 @@ discordClient.on("ready",() => {
     console.log("I'm alive!")
 })
 
-var maintenanceScheduled = true
+var maintenanceScheduled = false
 /**
  * Where the fun happens. This function is called hourly to tick down rocks' saturation levels
  */

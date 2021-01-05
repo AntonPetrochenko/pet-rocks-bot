@@ -6,6 +6,8 @@ const discordjs = require("discord.js")
 const namegen = require("unique-names-generator")
 const { uniqueNamesGenerator, adjectives, colors, names, countries } = require("unique-names-generator")
 
+const replyMessages = require("./messageTemplates")
+
 //Comamnd handler signature is:
 // function handler(incomingMessage: discordjs.Message, dbo: sqlite3.Database, discord)
 
@@ -35,7 +37,7 @@ function test(incomingMessage,dbo,discordClient) {
  */
 function adopt(incomingMessage,dbo) {
     //First, let's look for any rocks with no current owner
-    dbo.run()
+    //dbo.run()
 }
 
 /**
@@ -94,6 +96,45 @@ function rockCommandHelper(message) {
     }
 }
 
+function testAdoptMessage(message) {
+    var rock = rockCommandHelper(message)
+    if (rock) {
+       if (replyMessages.adoptionMessages[Number(rock)]) {
+            message.reply(replyMessages.adoptionMessages[Number(rock)](generateRockName()) + "\n\nBe sure to feed it 3 times a day.")
+       } else {
+           message.reply("No such message. The messages count from 0")
+       }
+    } else {
+        return
+    }
+}
+
+function testFeedMessage(message) {
+    var rock = rockCommandHelper(message)
+    if (rock) {
+       if (replyMessages.feedMessages[Number(rock)]) {
+            message.reply(replyMessages.feedMessages[Number(rock)](generateRockName()))
+       } else {
+        message.reply("No such message. The messages count from 0")
+    }
+    } else {
+        return
+    }
+}
+
+function testFindMessage(message) {
+    var rock = rockCommandHelper(message)
+    if (rock) {
+       if (replyMessages.findMessages[Number(rock)]) {
+            message.reply(replyMessages.findMessages[Number(rock)](generateRockName()) + "\n\nYou can either `!rocks keep` it or `!rocks reject` it")
+       } else {
+        message.reply("No such message. The messages count from 0")
+    }
+    } else {
+        return
+    }
+}
+
 /**
  * Helper function to generate names for rocks.
  * @returns {string} A name for a rock.
@@ -104,7 +145,10 @@ function generateRockName() {
 
 commands = {
     test,
-    help
+    help,
+    testAdoptMessage,
+    testFeedMessage,
+    testFindMessage
 }
 
 module.exports = commands

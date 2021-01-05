@@ -12,3 +12,9 @@ const findMessages = [
     (rockName,lastOwnerName) => `You hear knocking on your door. You open your door, but nobody is outside. When you look down, you notice there's a rock on yor doorstep. It introduces itself as ${rockName} and mentions something about ${lastOwnerName} neglecting it.`,
     (rockName,lastOwnerName) => `This rock was abandoned and needs your help! You can adopt it yourself or bring it to the Rock Shelter.`
 ]
+
+module.exports = {
+    adoptionMessages,
+    feedMessages,
+    findMessages
+}
