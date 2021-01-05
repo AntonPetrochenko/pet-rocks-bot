@@ -1,3 +1,7 @@
 {
-    "token": "your bot token here"
+    "token": "your bot token here",
+    "instanceMaintainers": [
+        "user id AS STRING, such as: ",
+        "369131409433952267"
+    ]
 }

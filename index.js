@@ -1,6 +1,27 @@
 // Copyright 2021 Anton Petrochenko
 // This code is licensed under MIT license (see LICENSE for details)
 
+/** Where the fun happens. This function is called hourly to tick down rocks' saturation levels and run other funny hourly events. */
+function main() {
+    console.log("Tick started!")
+    rocksDatabase.serialize(() => {
+        rocksDatabase.run("UPDATE rocks SET saturation = saturation - 1",function (err) {
+            console.log(`Updated ${this.changes} rocks.`)
+        })
+    })
+}
+
+var maintenanceScheduled = false
+
+function setMaintenanceMode() {
+    maintenanceScheduled = true
+}
+
+module.exports = {
+    main,
+    setMaintenanceMode
+}
+
 const discordjs = require("discord.js")
 const petRocksConfig = require("./config.json")
 
@@ -14,11 +35,8 @@ discordClient.on("ready",() => {
     console.log("I'm alive!")
 })
 
-var maintenanceScheduled = false
-/**
- * Where the fun happens. This function is called hourly to tick down rocks' saturation levels
- */
-function main() {}
+
+
 
 discordClient.on('message',(message) => {
     if (message.content.match(/^!rocks/)) {
@@ -51,12 +69,12 @@ discordClient.login(petRocksConfig.token).then((foo) => {
  * @property {Number} touchFlag
  */
 
- /**
-  * @typedef {Object} rock
-  * @property {Number} id
-  * @property {string} name
-  * @property {Number} saturation
-  * @property {string} ownerId
-  * @property {string} ownerLastKnownName
-  * @property {(0|1)} isCurrentlyOwned
-  */
+/**
+ * @typedef {Object} rock
+ * @property {Number} id
+ * @property {string} name
+ * @property {Number} saturation
+ * @property {string} ownerId
+ * @property {string} ownerLastKnownName
+ * @property {(0|1)} isCurrentlyOwned
+ */

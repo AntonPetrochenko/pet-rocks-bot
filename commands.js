@@ -1,10 +1,14 @@
 // Copyright 2021 Anton Petrochenko
 // This code is licensed under MIT license (see LICENSE for details)
 
+const config = require("./config.json")
+
 const sqlite3 = require("sqlite3")
 const discordjs = require("discord.js")
 const namegen = require("unique-names-generator")
 const { uniqueNamesGenerator, adjectives, colors, names, countries } = require("unique-names-generator")
+
+const index = require("./index")
 
 const replyMessages = require("./messageTemplates")
 
@@ -12,22 +16,40 @@ const replyMessages = require("./messageTemplates")
 // function handler(incomingMessage: discordjs.Message, dbo: sqlite3.Database, discord)
 
 /**
- * A basic test command, which logs the message sender details
+ * For various crazy shit, only available to instance maintainers defined on config
  * @param {sqlite3.Database} dbo Database object
  * @param {discordjs.Message} incomingMessage Message
  * @param {discordjs.Client} discordClient Discord client that received this command
  */
-function test(incomingMessage,dbo,discordClient) {
+function magic(incomingMessage,dbo,discordClient) {
     console.log({
         senderId: incomingMessage.author.id,
         senderName: incomingMessage.author.username,
     })
-    var rock = rockCommandHelper(incomingMessage)
-    if (rock) {
-        replyAndDelete(incomingMessage,`You've asked for ${rock}. We generated a name: ${generateRockName()}. This message will be deleted in 1 hour`)
+    if (config.instanceMaintainers.includes(incomingMessage.author.id)) {
+        var rock = rockCommandHelper(incomingMessage)
+        if (rock) {
+            switch (rock) {
+                case "force tick":
+                    index.main()
+                    incomingMessage.reply("skipped an hour.")
+                    break;
+                case "lock for maintenance":
+                    index.setMaintenanceMode()
+                    incomingMessage.reply("the bot is now locked for maintenance until a manual restart. Be sure to restart it in no less than an hour to let the current tick complete.")
+                    break;
+                default:
+                    incomingMessage.reply("That rock is nothing special.")
+                    break;
+            }
+        } else {
+            return
+        }
     } else {
-        return
+        incomingMessage.reply("nice try. ")
     }
+    
+
 }
 
 /**
@@ -36,8 +58,18 @@ function test(incomingMessage,dbo,discordClient) {
  * @param {sqlite3.Database} dbo Database object
  */
 function adopt(incomingMessage,dbo) {
-    //First, let's look for any rocks with no current owner
-    //dbo.run()
+    var rockName = generateRockName()
+    dbo.serialize(() => {
+        var statement = dbo.prepare(
+            "INSERT INTO rocks (name, saturation, ownerId, ownerLastKnownName, isCurrentlyOwned) VALUES (?, ?, ?, ?, ?)",
+        )
+        statement.run([rockName,24,incomingMessage.author.id,incomingMessage.author.username,1],() => {
+            incomingMessage.reply(
+                randomTemplate(replyMessages.adoptionMessages,[rockName])+
+                "\n\nBe sure to feed it 3 times a day."
+            )
+        })
+    })
 }
 
 /**
@@ -66,7 +98,7 @@ To make the Pet Rock Bot experience more immersive, do not deliberately write yo
 }
 
 function replyAndDelete(incomingMessage,content) {
-    incomingMessage.reply(`You've asked for ${rock}. We generated a name: ${generateRockName()}. This message will be deleted in 1 hour`).then((outgoingMessage) => {
+    incomingMessage.reply(content).then((outgoingMessage) => {
         incomingMessage.delete({timeout: 1000 * 60 * 60})
         outgoingMessage.delete({timeout: 1000 * 60 * 60})
     })
@@ -94,6 +126,17 @@ function rockCommandHelper(message) {
     } else {
         return rockName
     }
+}
+/**
+ * Executes a random template from the pool, inserting strings from the substitutions object.
+ * @param {Array<(...substitutions: Array<string>) => string> } templatePool Array of 
+ * @param {Array<string>} substitutions Object containing arguments for the template function
+ * @returns {string} Random template from the pool with substitutions in place
+ * @example
+ * randomTemplate(replyMessages.findMessages,{rockName: "Salmon Bessie the Resident of Liechtenstein", lastOwnerName: "allaandmelmel"})
+ */
+function randomTemplate(templatePool,substitutions) {
+    return templatePool[Math.floor(Math.random() * templatePool.length)](...substitutions)
 }
 
 function testAdoptMessage(message) {
@@ -144,8 +187,9 @@ function generateRockName() {
 }
 
 commands = {
-    test,
+    magic,
     help,
+    adopt,
     testAdoptMessage,
     testFeedMessage,
     testFindMessage
