@@ -20,7 +20,7 @@ discordClient.on('message',(message) => {
         var relatedUser = {}
         var command = message.content.match(/^!rocks (.*?)(?= |$)/)[1]
         if (commands[command]) {
-            commands[command](rocksDatabase,message,command)
+            commands[command](message,rocksDatabase)
         } else {
             message.reply(`Unknown command \`${command}\`! \`!rocks help\` for a quick rundown.`)
         }
