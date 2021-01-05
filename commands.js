@@ -7,24 +7,35 @@ const namegen = require("unique-names-generator")
 const { uniqueNamesGenerator, adjectives, colors, names, countries } = require("unique-names-generator")
 
 //Comamnd handler signature is:
-// function handler(message: discordjs.Message, dbo: sqlite3.Database)
+// function handler(incomingMessage: discordjs.Message, dbo: sqlite3.Database, discord)
 
 /**
  * A basic test command, which logs the message sender details
  * @param {sqlite3.Database} dbo Database object
- * @param {discordjs.Message} message Message
+ * @param {discordjs.Message} incomingMessage Message
+ * @param {discordjs.Client} discordClient Discord client that received this command
  */
-function test(message,dbo) {
+function test(incomingMessage,dbo,discordClient) {
     console.log({
-        senderId: message.author.id,
-        senderName: message.author.username,
+        senderId: incomingMessage.author.id,
+        senderName: incomingMessage.author.username,
     })
-    var rock = rockCommandHelper(message)
+    var rock = rockCommandHelper(incomingMessage)
     if (rock) {
-        message.reply(`You've asked for ${rock}. We generated a name: ${generateRockName()}`)
+        replyAndDelete(incomingMessage,`You've asked for ${rock}. We generated a name: ${generateRockName()}. This message will be deleted in 1 hour`)
     } else {
         return
     }
+}
+
+/**
+ * Finds a homeless rock or creates a new rock and assigns it to the user
+ * @param {discordjs.Message} incomingMessage Message
+ * @param {sqlite3.Database} dbo Database object
+ */
+function adopt(incomingMessage,dbo) {
+    //First, let's look for any rocks with no current owner
+    dbo.run()
 }
 
 /**
@@ -32,22 +43,33 @@ function test(message,dbo) {
  * @param {discordjs.Message} message 
  */
 function help(message) {
-    message.reply(`\`!rocks adopt\` to adopt a new rock (in moderation!)
+    message.reply(`Pet Rocks Bot is a "game" of responsibility.
+
+\`!rocks adopt\` to adopt a new rock (in moderation, don't become a rock maniac)
 \`!rocks feed Rock Name\` to feed your pet rock
 \`!rocks return Rock Name\` to return your pet rock to the shelter
 
 This bot will not: 
 - remind you to feed your pet rock
-- tell you when your rock had ran away due to starvation
+- tell you when your rock had ran away due to neglect
+- give you a list of your pet rocks
 
 This bot will:
-- tell you when somebody else's rock turned up on your doorstep. For that to happen, you need to have already owned a pet rock at any point or are currently owning any pet rocks
-- delete \`!rocks\` command calls that include your pet rock's name as a parameter after 24 hours
-- delete it's own replies that include your pet rock's name after 24 hours
+- tell you when somebody else's rock turned up on your doorstep. For that to happen, you need to have already owned a pet rock at any point or are currently owning any pet rocks.
+- delete \`!rocks\` command calls that include your pet rock's name as a parameter after 1 hour
+- delete it's own replies that include your pet rock's name after 1 hour
 
 If you forgot your pet rock's name, consider it lost.
-To make the Pet Rock Bot experience more immersive, do not write your pet rock's name in a way that can be easily searched with Discord's message search. Any other place is fine, though.`)
+To make the Pet Rock Bot experience more immersive, do not deliberately write your pet rock's name in a way that can be easily searched with Discord's message search. Any other way and place is fine, though, such as writing them in an MS Word document and talking about the rocks with your friends.`)
 }
+
+function replyAndDelete(incomingMessage,content) {
+    incomingMessage.reply(`You've asked for ${rock}. We generated a name: ${generateRockName()}. This message will be deleted in 1 hour`).then((outgoingMessage) => {
+        incomingMessage.delete({timeout: 1000 * 60 * 60})
+        outgoingMessage.delete({timeout: 1000 * 60 * 60})
+    })
+}
+
 
 /**
  * Helper function to use in commands that require a rock's name as an argument.
@@ -68,7 +90,6 @@ function rockCommandHelper(message) {
         message.reply('You must specify a rock name for this command to work.')
         return null
     } else {
-        message.delete()
         return rockName
     }
 }
@@ -80,8 +101,6 @@ function rockCommandHelper(message) {
 function generateRockName() {
     return uniqueNamesGenerator({separator: " ", style: "capital", dictionaries: [colors, names]}) + " the " + uniqueNamesGenerator({separator: " ", style: "capital", dictionaries: [adjectives ]}) + " of " + uniqueNamesGenerator({separator: " ", style: "capital", dictionaries: [countries]})
 }
-
-
 
 commands = {
     test,
